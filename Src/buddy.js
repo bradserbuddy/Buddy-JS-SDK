@@ -135,7 +135,7 @@ window.Buddy = function(root) {
 
 	loadCreds();
 
-	buddy.init = function(appId, appKey, options) {
+	buddy.init = function(appId, appKey, callback, options) {
 
 		_options = options || {};
 
@@ -150,6 +150,8 @@ window.Buddy = function(root) {
 		}
 
 		getSettings(true);
+
+		buddy.registerDevice(appId, appKey, callback);
 	}
 
 	buddy.clear = function() {
