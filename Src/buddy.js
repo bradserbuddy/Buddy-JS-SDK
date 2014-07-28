@@ -1,39 +1,40 @@
 
 
 window.Buddy = function(root) {
+	function BuddyClient(appId, appKey, settings){
+		if(_.isUndefined(appId) || appId == null)
+		{
+			throw "appId must be given on a BuddyClient";
+		}
+		this._appId = appId;
+		if(_.isUndefined(appKey) || appKey == null)
+		{
+			throw "appKey must be given on a BuddyClient";
+		}
+		this._appKey = appKey;
+		
+		this._settings = settings;
+		
+		this.root = this._settings.root || "https://api.buddyplatform.com"
+		
+		var _requestCount = 0;
 
-	root = root || "https://api.buddyplatform.com"
-
-	var buddy = {};
-
-	
-	var _appId;
-	var _appKey;
-	var _options;
-	var _settings;
-
-
-	function supports_html5_storage() {
-	  try {
-	    return 'localStorage' in window && window['localStorage'] !== null;
-	  } catch (e) {
-	    return false;
-	  }
+		function startRequest() {
+			_requestCount++;
+		}
 	}
-
-	function getSettings(force) {
+	
+	BuddyClient.prototype.getSettings = function(force) {
 		if ((!_settings || force) && supports_html5_storage() && _appId) {
 
-			var json = window.localStorage.getItem(_appId);
+			var json = window.localStorage.getItem(_calculateClientKey(_appId, _settings));
 			_settings = JSON.parse(json);
 		}
 		return _settings || {};
 	}
-
-	function updateSettings(updates, replace) {
+	
+	BuddyClient.prototype.updateSettings = function(updates, replace) {
 		if (supports_html5_storage() && _appId) {
-
-
 			var settings = updates;
 
 			if (!replace) {
@@ -43,20 +44,19 @@ window.Buddy = function(root) {
 				}
 			}
 
-			if (!_options.nosave) {
-			    window.localStorage.setItem(_appId, JSON.stringify(settings));
+			if (!_settings.nosave) {
+			    window.localStorage.setItem(_calculateClientKey(_appId, _settings), JSON.stringify(settings));
 			}
 			_settings = settings;
 			return _settings;
 		}
-
 	}
 
-	function clearSettings(type) {
+	BuddyClient.prototype.clearSettings = function(type) {
 		if (supports_html5_storage() && _appId) {
 
 			if (!type) {
-				window.localStorage.removeItem(_appId);
+				window.localStorage.removeItem(_calculateClientKey(_appId, _settings));
 				_settings = {}
 			}
 			else {
@@ -74,9 +74,70 @@ window.Buddy = function(root) {
 			}
 		}
 	}
+    
+	BuddyClient.prototype.supports_html5_storage = function(){
+		try {
+			return 'localStorage' in window && window['localStorage'] !== null;
+		} catch (e) {
+			return false;
+		}
+	}
+	
+	BuddyClient.prototype.getSettings = function(){
+		if ((!_settings || force) && supports_html5_storage() && _appId) {
 
+			var json = window.localStorage.getItem(_calculateClientKey(_appId, _settings));
+			_settings = JSON.parse(json);
+		}
+		return _settings || {};
+	}
+	
+	BuddyClient.prototype._calculateClientKey(appId, options){
+		return appId + options.instanceName;
+	}
+	
+	BuddyClient.prototype.updateSettings = function(updates, replace){
+		if (supports_html5_storage() && _appId) {
+			var settings = updates;
+			
+			if (!replace) {
+				settings = getSettings();
+				for (var key in updates) {
+					settings[key] = updates[key];
+				}
+			}
+			
+			if (!_settings.nosave) {
+			    window.localStorage.setItem(_calculateClientKey(_appId, _settings), JSON.stringify(settings));
+			}
+			_settings = settings;
+			return _settings;
+		}
+	}
+	
+	BuddyClient.prototype.clearSettings = function(type){
+		if (supports_html5_storage() && _appId) {
+			if (!type) {
+				window.localStorage.removeItem(_calculateClientKey(_appId, _settings));
+				_settings = {}
+			}
+			else {
 
-	function getUniqueId() {
+				var s = getSettings();
+				for (var key in s) {
+
+					var remove = type.device && key.indexOf("device") === 0 ||
+								 type.user && key.indexOf("user") === 0;
+					if (remove) {
+						delete s[key];
+					}
+				}
+				return updateSettings(s, true);
+			}
+		}
+	}
+	
+	BuddyClient.prototype.getUniqueId = function() {
 
 		var s = getSettings();
 
@@ -90,9 +151,7 @@ window.Buddy = function(root) {
 		return s.unique_id;
 	}
 	
-
-	function getAccessToken() {
-
+	BuddyClient.prototype.getAccessToken = function() {
 		var s = getSettings();
 		
 		var token = s.user_token || s.device_token;
@@ -102,11 +161,8 @@ window.Buddy = function(root) {
 		}
 		return null;
 	}
-
-	
-	function setAccessToken(type, value) {
-
-
+    	
+	BuddyClient.prototype.setAccessToken = function(type, value) {
 		if (value) {
 			
 			value = {
@@ -121,9 +177,8 @@ window.Buddy = function(root) {
 
 		updateSettings(update);
 	}
-
-	
-	function loadCreds() {
+    	
+	BuddyClient.prototype.loadCreds = function() {
 		var s = getSettings();
 
 		if (s && s.app_id) {
@@ -132,38 +187,8 @@ window.Buddy = function(root) {
 			getAccessToken();
 		}
 	}
-
-	loadCreds();
-
-	buddy.init = function(appId, appKey, options) {
-
-		_options = options || {};
-
-		_appId = appId;
-
-		if (!_appId) throw new Error("appId and appKey required");
-
-		_appKey = appKey;
-
-		if (_options.root) {
-			root = options.root;
-		}
-
-		getSettings(true);
-	}
-
-	buddy.clear = function() {
-
-		clearSettings();
-	}
-
-	//
-	// HELPER METHODS -
-	// We wrap a few common operations.
-	//
-
-	buddy.registerDevice = function(appId, appKey, callback) {
-
+	
+	BuddyClient.prototype.registerDevice = function(appId, appKey, callback){
 		if (getAccessToken()) {
 			callback && callback();
 			return;
@@ -187,16 +212,16 @@ window.Buddy = function(root) {
 		cb._hasUserCallback = callback;
 
 
-		return buddy.post("/devices", {
+		return this.post("/devices", {
 			appID: appId || _appId,
 			appKey: appKey || _appKey,
-			platform: _options.platform || "Javascript",
+			platform: _settings.platform || "Javascript",
 			model: navigator.userAgent,
 			uniqueId: getUniqueId()
 		},cb, true)
 	}
-
-	buddy.getUser = function(callback) {
+	
+	BuddyClient.prototype.getUser = function(callback) {
 
 		var s = getSettings();
 
@@ -215,13 +240,7 @@ window.Buddy = function(root) {
 		return s.user_id;
 	}
 
-	Object.defineProperty(buddy, "accessToken", {
-	    get: function() {
-	        return getAccessToken();
-	    }
-	});
-
-	buddy.loginUser = function(username, password, callback) {
+	BuddyClient.prototype.loginUser = function(username, password, callback) {
 
 		var cb = function(err, r){
 			if (r.success) {
@@ -245,31 +264,7 @@ window.Buddy = function(root) {
 		
 	}
 
-	buddy.socialLogin = function(identityProviderName, identityID, identityAccessToken, callback) {
-
-		var cb = function(err, r){
-			if (r.success) {
-				var user = r.result;
-				updateSettings({
-					user_id: user.id
-				});
-
-				setAccessToken('user', user);
-			}
-			callback && callback(err, r && r.result);
-		};
-
-		cb._hasUserCallback = callback;
-
-		return buddy.post("/users/login/social", {
-			identityID: identityID,
-			identityProviderName: identityProviderName,
-			identityAccessToken: identityAccessToken
-		}, cb);
-	}
-
-	buddy.logoutUser = function(callback) {
-
+	BuddyClient.prototype.logoutUser = function(callback) {
 		var s = getSettings();
 		var userId = s.user_id;
 
@@ -284,14 +279,10 @@ window.Buddy = function(root) {
 				})
 
 				callback && callback();
-
 		});
-		
 	}
 
-	buddy.createUser = function(options, callback) {
-
-		
+	BuddyClient.prototype.createUser = function(options, callback) {
 		if (!options.username || !options.password) {
 			throw new Error("Username and password are required.");
 		}
@@ -307,21 +298,15 @@ window.Buddy = function(root) {
 			}
 			callback && callback(err, r && r.result);
 		});
-		
 	}
 
-	//
-	// Record an 
-	//
-	buddy.recordMetricEvent = function(eventName, values, timeoutInSeconds, callback) {
-
+	BuddyClient.prototype.recordMetricEvent = function(eventName, values, timeoutInSeconds, callback) {
 		if (typeof timeoutInMinutes == 'function') {
 			callback = timeoutInMinutes;
 			timeoutInMinutes = null;
 		}
 
 		var cb = function(err, result){
-
 			if (err) {
 				callback && callback(err);
 			}
@@ -357,98 +342,8 @@ window.Buddy = function(root) {
 
 
 	}
-
-	// just let things unwind a bit, mmk?
-	function defer(callback) {
-
-		if (!callback) return;
-
-		setTimeout(function() {
-			var args = Array.prototype.slice.call(arguments, 2);
-			callback.apply(null, args);
-		}, 0);
-	}
-
-	var AuthErrors = {
-		AuthFailed :                        0x100,
-		AuthAccessTokenInvalid :            0x104,
-		AuthUserAccessTokenRequired :       0x107,
-		AuthAppCredentialsInvalid :         0x105
-	}
-
-
-	var _requestCount = 0;
-
-	function startRequest() {
-		_requestCount++;
-	}
-
-	function processResult(result, callback) {
-
-		_requestCount--;
-		
-		result.success = !result.error;
-
-		if (result.error) {
-			var err = new Error(result.message || result.error);
-			err.error = result.error;
-			err.errorNumber = result.errorNumber;
-			err.status = result.status;
-
-			callback && callback(err, result);
-			if (!callback || !callback._hasUserCallback) {
-				console.warn(JSON.stringify(result,  null, 2));
-				$.event.trigger({
-					type: "BuddyError",
-					buddy: result
-				});
-			}
-		}
-		else {
-			convertDates(result.result);
-			callback && callback(null, result);
-			if (!callback || !callback._hasUserCallback) {
-				console.log(JSON.stringify(result,  null, 2));
-			}
-		}
-	}
-
-	//
-	// Convert dates format like /Date(124124)/ to a JS Date, recursively
-	//
-	function convertDates(obj, seen) {
-
-		seen = seen || {};
-
-		if (!obj || seen[obj]) {
-			return;
-		}
-
-		// prevent loops
-		seen[obj] = true;
-
-		for (var key in obj) {
-			var val = obj[key];
-			if (typeof val ==  'string') {
-				var match = val.match(/\/Date\((\d+)\)\//);
-				if (match) {
-					obj[key] = new Date(Number(match[1]));
-				}
-			}
-			else if (typeof value == 'object') {
-				convertDates(obj);
-			}
-		}
-		return obj;
-	}
-
-	//
-	// The main caller request, handles call setup and formatting,
-	// authentication, and basic error conditions such as triggering the login
-	// callback or no internet callback.
-	//
-	function makeRequest(method, url, parameters, callback, noAutoToken) {
-
+	
+	BuddyClient.prototype.makeRequest = function(method, url, parameters, callback, noAutoToken) {
 		if (!method || !url) {
 			throw new Error("Method and URL required.")
 		}
@@ -460,7 +355,7 @@ window.Buddy = function(root) {
 		}
 
 		// see if we've already got an access token
-		var at = getAccessToken();
+		var at = this.getAccessToken();
 		
 		if (at && !_appKey) {
 			return callback(new Error("Init must be called first."))
@@ -471,10 +366,10 @@ window.Buddy = function(root) {
 		    //
 		    var cb = function (err, r1) {
 		        if (!err && r1.success) {
-		            at = getAccessToken();
+		            at = this.getAccessToken();
 
 		            if (at) {
-		                makeRequest(method, url, parameters, callback);
+		                this.makeRequest(method, url, parameters, callback);
 		                return;
 		            }
 		        }
@@ -483,7 +378,7 @@ window.Buddy = function(root) {
 		        }
 		    };
 		    cb._hasUserCallback = true;
-			buddy.registerDevice(null, null, cb)
+			this.registerDevice(null, null, cb)
 			return;
 		}
 
@@ -523,7 +418,7 @@ window.Buddy = function(root) {
 			for (var name in parameters) {
 				var val = parameters[name];
 
-				if (val instanceof File || (typeof Blob !== "undefined" && val instanceof Blob)) {
+				if (val instanceof File) {
 					fileParams = {} || fileParams;
 					fileParams[name] = val;
 				}
@@ -593,8 +488,8 @@ window.Buddy = function(root) {
 						error: "NoInternetConnection",
 						errorNumber: -1
 					};
-					console.warn("ERROR: Can't connect to Buddy Platform.");
-					_options && _options.connectionStateChanged && defer(_options.connectionStateChagned);
+					console.warn("ERROR: Can't connect to Buddy Platform (" + r + ")");
+					_settings && _settings.connectionStateChanged && defer(_settings.connectionStateChagned);
 				}
 				else {
 					data = JSON.parse(data.responseText);
@@ -607,7 +502,7 @@ window.Buddy = function(root) {
 							break;
 						case AuthErrors.AuthUserAccessTokenRequired:
 							clearSettings({user:true});
-							_options && _options.loginRequired && defer(_options.loginRequired);
+							_settings && _settings.loginRequired && defer(_settings.loginRequired);
 							break;
 					}
 				}
@@ -617,25 +512,256 @@ window.Buddy = function(root) {
 		return 'Waiting for ' + url + "..."
 	}
 
-	buddy.get = function(url, parameters, callback, noAuto) {
+	BuddyClient.prototype.processResult = function(result, callback) {
+		_requestCount--;
+		
+		result.success = !result.error;
+
+		if (result.error) {
+			var err = new Error(result.message || result.error);
+			err.error = result.error;
+			err.errorNumber = result.errorNumber;
+			err.status = result.status;
+
+			callback && callback(err, result);
+			if (!callback || !callback._hasUserCallback) {
+				console.warn(JSON.stringify(result,  null, 2));
+				$.event.trigger({
+					type: "BuddyError",
+					buddy: result
+				});
+			}
+		}
+		else {
+			convertDates(result.result);
+			callback && callback(null, result);
+			if (!callback || !callback._hasUserCallback) {
+				console.log(JSON.stringify(result,  null, 2));
+			}
+		}
+	}
+	
+	BuddyClient.prototype.get = function(url, parameters, callback, noAuto) {
+		return this.makeRequest("GET", url, parameters, callback, noAuto);
+	}
+
+	BuddyClient.prototype.post = function(url, parameters, callback, noAuto) {
+		return this.makeRequest("POST", url, parameters, callback, noAuto);
+	}
+
+	BuddyClient.prototype.put = function(url, parameters, callback, noAuto) {
+		return this.makeRequest("PUT", url, parameters, callback, noAuto);
+	}
+
+	BuddyClient.prototype.patch = function(url, parameters, callback, noAuto) {
+		return this.makeRequest("PATCH", url, parameters, callback, noAuto);
+	}
+
+	BuddyClient.prototype.delete = function(url, parameters, callback, noAuto) {
+		return this.makeRequest("DELETE", url, parameters, callback, noAuto);
+	}
+
+	BuddyClient.prototype.getUniqueId = function() {
+		var s = getSettings();
+
+		if (!s.unique_id) {
+			
+			s = updateSettings({
+				unique_id: _appId + ":" +new Date().getTime() // good enough for this
+			})
+		}
+		
+		return s.unique_id;
+	}
+
+	BuddyClient.prototype.socialLogin = function(identityProviderName, identityID, identityAccessToken, callback){
+		var cb = function(err, r){
+			if (r.success) {
+				var user = r.result;
+				updateSettings({
+					user_id: user.id
+				});
+
+				setAccessToken('user', user);
+			}
+			callback && callback(err, r && r.result);
+		};
+
+		cb._hasUserCallback = callback;
+
+		return buddy.post("/users/login/social", {
+			identityID: identityID,
+			identityProviderName: identityProviderName,
+			identityAccessToken: identityAccessToken
+		}, cb);
+	}
+
+
+	function supports_html5_storage() {
+		return _client.supports_html5_storage();
+	}
+
+	function getSettings(force) {
+		return _client.getSettings(force);
+	}
+
+	function updateSettings(updates, replace) {
+		_client.updateSettings(updates, replace);
+	}
+
+	function clearSettings(type) {
+		return _client.clearSettings(type);
+	}
+
+	function getUniqueId() {
+		return _client.getUniqueId();
+	}
+
+	function getAccessToken() {
+		return _client.getAccessToken();
+	}
+
+	function setAccessToken(type, value) {
+		return _client.setAccessToken(type, value);
+	}
+
+	function loadCreds() {
+		return _client.loadCreds();
+	}
+
+	loadCreds();
+	
+	var _clients = [];
+	var _client = null;
+	
+	function init(appId, appKey, options) {
+		if (!_appId) throw new Error("appId and appKey required");
+		
+		var clientKey = _calculateClientKey(appId, options);
+		
+		if(!_clients[clientKey]){
+			_clients[clientKey] = new BuddyClient(appId, appKey, options);
+		}
+		
+		_client = _clients[clientKey];
+		return _client;
+	}
+
+	clear = function() {
+		_client.clearSettings();
+	}
+
+	// HELPER METHODS -
+	// We wrap a few common operations.
+	registerDevice = function(appId, appKey, callback) {
+		return _client.registerDevice(appId, appKey, callback);
+	}
+
+	getUser = function(callback) {
+		return _client.getUser(callback);
+	}
+
+	Object.defineProperty(this, "accessToken", {
+	    get: function() {
+	        return _client.getAccessToken();
+	    }
+	});
+
+	loginUser = function(username, password, callback) {
+		return _client.loginUser();
+	}
+
+	socialLogin = function(identityProviderName, identityID, identityAccessToken, callback) {
+		return _client.socialLogin(identityProviderName, identityID, identityAccessToken, callback);
+	}
+
+	logoutUser = function(callback) {
+		return _client.logoutUser(callback);
+	}
+
+	createUser = function(options, callback) {
+		return _client.createUser(options, callback);
+	}
+
+	// Record an 
+	recordMetricEvent = function(eventName, values, timeoutInSeconds, callback) {
+		return _client.recordMetricEvent(eventName, values, timeoutInSeconds, callback);
+	}
+
+	// just let things unwind a bit, mmk?
+	function defer(callback) {
+		if (!callback) return;
+
+		setTimeout(function() {
+			var args = Array.prototype.slice.call(arguments, 2);
+			callback.apply(null, args);
+		}, 0);
+	}
+
+	var AuthErrors = {
+		AuthFailed :                        0x100,
+		AuthAccessTokenInvalid :            0x104,
+		AuthUserAccessTokenRequired :       0x107,
+		AuthAppCredentialsInvalid :         0x105
+	}
+
+	//
+	// Convert dates format like /Date(124124)/ to a JS Date, recursively
+	//
+	function convertDates(obj, seen) {
+
+		seen = seen || {};
+
+		if (!obj || seen[obj]) {
+			return;
+		}
+
+		// prevent loops
+		seen[obj] = true;
+
+		for (var key in obj) {
+			var val = obj[key];
+			if (typeof val ==  'string') {
+				var match = val.match(/\/Date\((\d+)\)\//);
+				if (match) {
+					obj[key] = new Date(Number(match[1]));
+				}
+			}
+			else if (typeof value == 'object') {
+				convertDates(obj);
+			}
+		}
+		return obj;
+	}
+
+	//
+	// The main caller request, handles call setup and formatting,
+	// authentication, and basic error conditions such as triggering the login
+	// callback or no internet callback.
+	//
+	function makeRequest(method, url, parameters, callback, noAutoToken) {
+		return _client.makeRequest(method, url, parameters, callback, noAutoToken);
+	}
+
+	function get(url, parameters, callback, noAuto) {
 		return makeRequest("GET", url, parameters, callback, noAuto);
 	}
 
-	buddy.post = function(url, parameters, callback, noAuto) {
+	function post(url, parameters, callback, noAuto) {
 		return makeRequest("POST", url, parameters, callback, noAuto);
 	}
 
-	buddy.put = function(url, parameters, callback, noAuto) {
+	function put(url, parameters, callback, noAuto) {
 		return makeRequest("PUT", url, parameters, callback, noAuto);
 	}
 
-	buddy.patch = function(url, parameters, callback, noAuto) {
+	function patch(url, parameters, callback, noAuto) {
 		return makeRequest("PATCH", url, parameters, callback, noAuto);
 	}
 
-	buddy.delete = function(url, parameters, callback, noAuto) {
+	function delete(url, parameters, callback, noAuto) {
 		return makeRequest("DELETE", url, parameters, callback, noAuto);
 	}
-
-	return buddy;
+	
+	return this;
 }();
