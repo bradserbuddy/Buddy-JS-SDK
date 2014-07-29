@@ -754,9 +754,11 @@ window.Buddy = function(root) {
 		return makeRequest("PATCH", url, parameters, callback, noAuto);
 	}
 	
-	DELETE = function(url, parameters, callback, noAuto) {
-		return makeRequest("DELETE", url, parameters, callback, noAuto);
-	}
+	
 	
 	return this;
 }();
+
+Buddy.delete = function(url, parameters, callback, noAuto) {
+		return makeRequest("DELETE", url, parameters, callback, noAuto);
+	}
