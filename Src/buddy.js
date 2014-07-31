@@ -1,6 +1,20 @@
+window.Buddy =  function (root) {
+	var buddy = {};
 
 
-window.Buddy = function(root) {
+	function supports_html5_storage(){
+		try {
+			return 'localStorage' in window && window['localStorage'] !== null;
+		} catch (e) {
+			return false;
+		}
+	}
+
+	function _calculateClientKey(appId, options){
+		return appId + options.instanceName;
+	}
+
+	
 	function BuddyClient(appId, appKey, settings){
 		if(!appId)
 		{
@@ -12,56 +26,69 @@ window.Buddy = function(root) {
 			throw "appKey must be given on a BuddyClient";
 		}
 		this._appKey = appKey;
-		
-		this._settings = settings || {};
-		
+
+		// set the settings so we pick up the instanceName
+		//
+		this._settings = settings;
+
+		this._settings = getSettings(this, true);
+
+
+		if (settings) {
+			for (var k in settings) {
+				this._settings[k] = settings[k];
+			}
+		}
+
 		this.root = this._settings.root || "https://api.buddyplatform.com"
 		this._settings.root = this.root;
 		this._requestCount = 0;
+
+		this._output = settings.output || console;
 
 		function startRequest() {
 			this._requestCount++;
 		}
 	}
 	
-	BuddyClient.prototype.getSettings = function(force) {
-		if ((!this._settings || force) && supports_html5_storage() && this._appId) {
+	function getSettings(client, force) {
+		if ((!client._settings || force) && supports_html5_storage() && client._appId) {
 
-			var json = window.localStorage.getItem(_calculateClientKey(_appId, this._settings));
-			this._settings = JSON.parse(json);
+			var json = window.localStorage.getItem(_calculateClientKey(client._appId, client._settings));
+			client._settings = JSON.parse(json);
 		}
-		return this._settings || {};
+		return client._settings || {};
 	}
 	
-	BuddyClient.prototype.updateSettings = function(updates, replace) {
-		if (supports_html5_storage() && this._appId) {
+    function updateSettings(client, updates, replace) {
+		if (supports_html5_storage() && client._appId) {
 			var settings = updates;
 
 			if (!replace) {
-				settings = getSettings();
+				settings = getSettings(client);
 				for (var key in updates) {
 					settings[key] = updates[key];
 				}
 			}
 
-			if (!this._settings.nosave) {
-			    window.localStorage.setItem(_calculateClientKey(this._appId, this._settings), JSON.stringify(settings));
+			if (!client._settings.nosave) {
+			    window.localStorage.setItem(_calculateClientKey(client._appId, client._settings), JSON.stringify(settings));
 			}
-			this._settings = settings;
-			return this._settings;
+			client._settings = settings;
+			return client._settings;
 		}
 	}
 
-	BuddyClient.prototype.clearSettings = function(type) {
-		if (supports_html5_storage() && this._appId) {
+	function clearSettings(client, type) {
+		if (supports_html5_storage() && client._appId) {
 
 			if (!type) {
-				window.localStorage.removeItem(_calculateClientKey(this._appId, this._settings));
-				this._settings = {}
+				window.localStorage.removeItem(_calculateClientKey(client._appId, client._settings));
+				client._settings = {}
 			}
 			else {
 
-				var s = getSettings();
+				var s = getSettings(client);
 				for (var key in s) {
 
 					var remove = type.device && key.indexOf("device") === 0 ||
@@ -70,79 +97,26 @@ window.Buddy = function(root) {
 						delete s[key];
 					}
 				}
-				return updateSettings(s, true);
+				return updateSettings(client, s, true);
 			}
 		}
 	}
     
-	BuddyClient.prototype.supports_html5_storage = function(){
-		try {
-			return 'localStorage' in window && window['localStorage'] !== null;
-		} catch (e) {
-			return false;
-		}
-	}
-	
-	BuddyClient.prototype._calculateClientKey = function(appId, options){
-		return Buddy._calculateClientKey(appId, options);
-	}
-	
-	BuddyClient.prototype.updateSettings = function(updates, replace){
-		if (supports_html5_storage() && this._appId) {
-			var settings = updates;
-			
-			if (!replace) {
-				settings = getSettings();
-				for (var key in updates) {
-					settings[key] = updates[key];
-				}
-			}
-			
-			if (!this._settings.nosave) {
-			    window.localStorage.setItem(_calculateClientKey(this._appId, this._settings), JSON.stringify(settings));
-			}
-			this._settings = settings;
-			return this._settings;
-		}
-	}
-	
-	BuddyClient.prototype.clearSettings = function(type){
-		if (supports_html5_storage() && this._appId) {
-			if (!type) {
-				window.localStorage.removeItem(_calculateClientKey(this._appId, this._settings));
-				this._settings = {}
-			}
-			else {
-
-				var s = getSettings();
-				for (var key in s) {
-
-					var remove = type.device && key.indexOf("device") === 0 ||
-								 type.user && key.indexOf("user") === 0;
-					if (remove) {
-						delete s[key];
-					}
-				}
-				return updateSettings(s, true);
-			}
-		}
-	}
-	
-	BuddyClient.prototype.getUniqueId = function() {
-		var s = getSettings();
+	function getUniqueId(client) {
+		var s = getSettings(client);
 
 		if (!s.unique_id) {
 			
-			s = updateSettings({
-				unique_id: this._appId + ":" +new Date().getTime() // good enough for this
+			s = updateSettings(client, {
+				unique_id: client._appId + ":" +new Date().getTime() // good enough for this
 			})
 		}
 		
 		return s.unique_id;
 	}
 	
-	BuddyClient.prototype.getAccessToken = function() {
-		var s = getSettings();
+	function getAccessToken(client) {
+		var s = getSettings(client);
 		
 		var token = s.user_token || s.device_token;
 
@@ -152,7 +126,7 @@ window.Buddy = function(root) {
 		return null;
 	}
     	
-	BuddyClient.prototype.setAccessToken = function(type, value) {
+	function setAccessToken(client, type, value) {
 		if (value) {
 			
 			value = {
@@ -165,21 +139,21 @@ window.Buddy = function(root) {
 
 		update[type + "_token"] = value;
 
-		updateSettings(update);
+		updateSettings(client, update);
 	}
     	
-	BuddyClient.prototype.loadCreds = function() {
-		var s = getSettings();
+	function loadCreds(client) {
+		var s = getSettings(client);
 
 		if (s && s.app_id) {
-			this._appId = s.app_id;
-			this._appKey = s.app_key;
-			getAccessToken();
+			client._appId = s.app_id;
+			client._appKey = s.app_key;
+			getAccessToken(client);
 		}
 	}
 	
 	BuddyClient.prototype.registerDevice = function(appId, appKey, callback){
-		if (getAccessToken()) {
+		if (getAccessToken(this)) {
 			callback && callback();
 			return;
 		}
@@ -196,30 +170,30 @@ window.Buddy = function(root) {
 					newSettings["serviceRoot"] = r.result.serviceRoot;
 				}
 		        updateSettings(newSettings);
-		        setAccessToken("device", r.result);
-		        console.log("Device Registration Complete.");
+		        setAccessToken(self, "device", r.result);
+		        self._output && self._output.log && self._output.log("Device Registration Complete.");
 		        callback && callback(err, r);
 		    }
 		    else {
-		        processResult(r, callback);
+		        processResult(this, r, callback);
 		    }
 
 		};
 
-		cb._hasUserCallback = callback;
+		cb._printResult = !callback;
 
 		return this.post("/devices", {
 			appID: appId || this._appId,
 			appKey: appKey || this._appKey,
 			platform: this._settings.platform || "Javascript",
 			model: navigator.userAgent,
-			uniqueId: getUniqueId()
+			uniqueId: getUniqueId(this)
 		},cb, true)
 	}
 	
 	BuddyClient.prototype.getUser = function(callback) {
 
-		var s = getSettings();
+		var s = getSettings(this);
 
 		if (!s.user_id) {
 			return callback && callback();
@@ -237,10 +211,12 @@ window.Buddy = function(root) {
 	}
 
 	BuddyClient.prototype.loginUser = function(username, password, callback) {
+		var self = this;
+		
 		var cb = function(err, r){
 			if (r.success) {
 				var user = r.result;
-				updateSettings({
+				updateSettings(self, {
 					user_id: user.id
 				});
 
@@ -250,7 +226,7 @@ window.Buddy = function(root) {
 			callback && callback(err, r && r.result);
 		};
 
-		cb._hasUserCallback = callback;
+		cb._printResult = !callback;
 
 		return this.post("/users/login", {
 			username: username,
@@ -260,7 +236,7 @@ window.Buddy = function(root) {
 	}
 
 	BuddyClient.prototype.logoutUser = function(callback) {
-		var s = getSettings();
+		var s = getSettings(this);
 		var userId = s.user_id;
 
 		if (!userId) {
@@ -282,17 +258,20 @@ window.Buddy = function(root) {
 			throw new Error("Username and password are required.");
 		}
 
-		return this.post("/users", options, function(err, r){
+		var self = this;
+		var cb = function(err, r){
 
 			if (r.success) {
 				var user = r.result;
-				updateSettings({
+				updateSettings(self, {
 						user_id: user.id
 					});
-				setAccessToken('user', user);
+				setAccessToken(self, 'user', user);
 			}
 			callback && callback(err, r && r.result);
-		});
+		}
+		cb._printResult = !callback;
+		return this.post("/users", options, cb);
 	}
 
 	BuddyClient.prototype.recordMetricEvent = function(eventName, values, timeoutInSeconds, callback) {
@@ -300,20 +279,21 @@ window.Buddy = function(root) {
 			callback = timeoutInMinutes;
 			timeoutInMinutes = null;
 		}
-
+		var self = this;
+		
 		var cb = function(err, result){
 			if (err) {
 				callback && callback(err);
 			}
 			else if (timeoutInSeconds && result.result) {
-				var self = this;
+				
 				var r2 = {
 					 finish: function(values2, callback2){
 					 	if (typeof values2 == 'function') {
 					 		callback2 = values2;
 					 		values2 = null;
 					 	}
-						self.DELETE(
+						self.delete(
 							'/metrics/events/' + result.result.id, 
 							{
 									values: values
@@ -329,7 +309,7 @@ window.Buddy = function(root) {
 				callback && callback(err, result);
 			}
 		};
-		cb._hasUserCallback = callback;
+		cb._printResult = !callback;
 
 		return this.post("/metrics/events/" + eventName, {
 			values: values,
@@ -337,8 +317,8 @@ window.Buddy = function(root) {
 		}, cb);
 	}
 	
-	BuddyClient.prototype.processResult = function(result, callback) {
-		this._requestCount--;
+	function processResult(client, result, callback) {
+		client._requestCount--;
 		
 		result.success = !result.error;
 
@@ -349,8 +329,8 @@ window.Buddy = function(root) {
 			err.status = result.status;
 
 			callback && callback(err, result);
-			if (!callback || !callback._hasUserCallback) {
-				console.warn(JSON.stringify(result,  null, 2));
+			if (!callback || callback._printResult) {
+				client._output && client._output.warn && client._output.warn(JSON.stringify(result,  null, 2));
 				$.event.trigger({
 					type: "BuddyError",
 					buddy: result
@@ -360,13 +340,13 @@ window.Buddy = function(root) {
 		else {
 			convertDates(result.result);
 			callback && callback(null, result);
-			if (!callback || !callback._hasUserCallback) {
-				console.log(JSON.stringify(result,  null, 2));
+			if (!callback || callback._printResult) {
+				client._output && client._output.log && client._output.log(JSON.stringify(result,  null, 2));
 			}
 		}
 	}
 	
-	BuddyClient.prototype.makeRequest = function(method, url, parameters, callback, noAutoToken) {
+	function makeRequest(client, method, url, parameters, callback, noAutoToken) {
 		if (!method || !url) {
 			throw new Error("Method and URL required.")
 		}
@@ -378,9 +358,9 @@ window.Buddy = function(root) {
 		}
 
 		// see if we've already got an access token
-		var at = this.getAccessToken();
+		var at = getAccessToken(client);
 		
-		if (at && !this._appKey) {
+		if (at && !client._appKey) {
 			return callback(new Error("Init must be called first."))
 		}
 		else if (!at && !noAutoToken) {
@@ -389,10 +369,10 @@ window.Buddy = function(root) {
 		    //
 		    var cb = function (err, r1) {
 		        if (!err && r1.success) {
-		            at = this.getAccessToken();
+		            at = getAccessToken(client);
 
 		            if (at) {
-		                this.makeRequest(method, url, parameters, callback);
+		                makeRequest(client, method, url, parameters, callback);
 		                return;
 		            }
 		        }
@@ -400,8 +380,8 @@ window.Buddy = function(root) {
 		            callback(err);
 		        }
 		    };
-		    cb._hasUserCallback = true;
-			this.registerDevice(null, null, cb)
+		    cb._printResult = false;
+			client.registerDevice(null, null, cb)
 			return;
 		}
 
@@ -489,10 +469,10 @@ window.Buddy = function(root) {
 		
 		// OK, let's make the call for realz
 		//
-		var s = getSettings();
+		var s = getSettings(client);
 		var r = s.root || root;
 		
-		var self = this;
+		var self = client;
 	    $.ajax({
 	        method: method,
             type: method,
@@ -502,7 +482,7 @@ window.Buddy = function(root) {
 			processData: false,
 			data: parameters,
             success:function(data) {
-				self.processResult(data, callback);
+				processResult(self, data, callback);
 			},
 			error: function(data, status, response) {
 
@@ -523,46 +503,46 @@ window.Buddy = function(root) {
 						case AuthErrors.AuthAppCredentialsInvalid:
 							// if we get either of those, drop all our app state.
 							// 
-							clearSettings();
+							clearSettings(client);
 							break;
 						case AuthErrors.AuthUserAccessTokenRequired:
-							clearSettings({user:true});
+							clearSettings(client, {user:true});
 							self._settings && self._settings.loginRequired && defer(self._settings.loginRequired);
 							break;
 					}
 				}
-				self.processResult(data, callback);
+				processResult(self, data, callback);
 			}
 		});
 		return 'Waiting for ' + url + "..."
 	}
 
 	BuddyClient.prototype.get = function(url, parameters, callback, noAuto) {
-		return this.makeRequest("GET", url, parameters, callback, noAuto);
+		return makeRequest(this, "GET", url, parameters, callback, noAuto);
 	}
 
 	BuddyClient.prototype.post = function(url, parameters, callback, noAuto) {
-		return this.makeRequest("POST", url, parameters, callback, noAuto);
+		return makeRequest(this, "POST", url, parameters, callback, noAuto);
 	}
 
 	BuddyClient.prototype.put = function(url, parameters, callback, noAuto) {
-		return this.makeRequest("PUT", url, parameters, callback, noAuto);
+		return makeRequest(this, "PUT", url, parameters, callback, noAuto);
 	}
 
 	BuddyClient.prototype.patch = function(url, parameters, callback, noAuto) {
-		return this.makeRequest("PATCH", url, parameters, callback, noAuto);
+		return makeRequest(this, "PATCH", url, parameters, callback, noAuto);
 	}
 
 	BuddyClient.prototype.delete = function(url, parameters, callback, noAuto) {
-		return this.makeRequest("DELETE", url, parameters, callback, noAuto);
+		return makeRequest(this, "DELETE", url, parameters, callback, noAuto);
 	}
 
 	BuddyClient.prototype.getUniqueId = function() {
-		var s = getSettings();
+		var s = getSettings(this);
 
 		if (!s.unique_id) {
 			
-			s = updateSettings({
+			s = updateSettings(this, {
 				unique_id: this._appId + ":" +new Date().getTime() // good enough for this
 			})
 		}
@@ -574,16 +554,16 @@ window.Buddy = function(root) {
 		var cb = function(err, r){
 			if (r.success) {
 				var user = r.result;
-				updateSettings({
+				updateSettings(this, {
 					user_id: user.id
 				});
 
-				setAccessToken('user', user);
+				setAccessToken(this, 'user', user);
 			}
 			callback && callback(err, r && r.result);
 		};
 
-		cb._hasUserCallback = callback;
+		cb._printResult = !callback;
 
 		return this.post("/users/login/social", {
 			identityID: identityID,
@@ -592,44 +572,13 @@ window.Buddy = function(root) {
 		}, cb);
 	}
 
-
-	supports_html5_storage = function() {
-		return _client.supports_html5_storage();
-	}
-
-	getSettings = function(force) {
-		return _client.getSettings(force);
-	}
-
-	updateSettings = function(updates, replace) {
-		return _client.updateSettings(updates, replace);
-	}
-
-	clearSettings = function(type) {
-		return _client.clearSettings(type);
-	}
-
-	getUniqueId = function() {
-		return _client.getUniqueId();
-	}
-
-	getAccessToken = function() {
-		return _client.getAccessToken();
-	}
-
-	setAccessToken = function(type, value) {
-		return _client.setAccessToken(type, value);
-	}
-
-	_calculateClientKey = function(appId, options){
-		return appId + options.instanceName;
-	}
+	
 	
 	
 	_clients = [];
 	_client = null;
 	
-	init = function(appId, appKey, options) {
+	buddy.init = function(appId, appKey, options) {
 		if (!appId) throw new Error("appId and appKey required");
 		
 		var clientKey = _calculateClientKey(appId, options);
@@ -644,48 +593,48 @@ window.Buddy = function(root) {
 	}
 
 	clear = function() {
-		_client.clearSettings();
+		clearSettings(_client);
 	}
 
 	// HELPER METHODS -
 	// We wrap a few common operations.
-	registerDevice = function(appId, appKey, callback) {
+	buddy.registerDevice = function(appId, appKey, callback) {
 		return _client.registerDevice(appId, appKey, callback);
 	}
 
-	getUser = function(callback) {
+	buddy.getUser = function(callback) {
 		return _client.getUser(callback);
 	}
 
-	Object.defineProperty(this, "accessToken", {
+	Object.defineProperty(buddy, "accessToken", {
 	    get: function() {
-	        return _client.getAccessToken();
+	        return getAccessToken(_client);
 	    }
 	});
 
-	loginUser = function(username, password, callback) {
+	buddy.loginUser = function(username, password, callback) {
 		return _client.loginUser(username, password, callback);
 	}
 
-	socialLogin = function(identityProviderName, identityID, identityAccessToken, callback) {
+	buddy.socialLogin = function(identityProviderName, identityID, identityAccessToken, callback) {
 		return _client.socialLogin(identityProviderName, identityID, identityAccessToken, callback);
 	}
 
-	logoutUser = function(callback) {
+	buddy.logoutUser = function(callback) {
 		return _client.logoutUser(callback);
 	}
 
-	createUser = function(options, callback) {
+	buddy.createUser = function(options, callback) {
 		return _client.createUser(options, callback);
 	}
 
 	// Record an 
-	recordMetricEvent = function(eventName, values, timeoutInSeconds, callback) {
+	buddy.recordMetricEvent = function(eventName, values, timeoutInSeconds, callback) {
 		return _client.recordMetricEvent(eventName, values, timeoutInSeconds, callback);
 	}
 
 	// just let things unwind a bit, mmk?
-	defer = function(callback) {
+	var defer = function(callback) {
 		if (!callback) return;
 
 		setTimeout(function() {
@@ -704,7 +653,7 @@ window.Buddy = function(root) {
 	//
 	// Convert dates format like /Date(124124)/ to a JS Date, recursively
 	//
-	convertDates = function(obj, seen) {
+	var convertDates = function(obj, seen) {
 		seen = seen || {};
 
 		if (!obj || seen[obj]) {
@@ -734,31 +683,25 @@ window.Buddy = function(root) {
 	// authentication, and basic error conditions such as triggering the login
 	// callback or no internet callback.
 	//
-	makeRequest = function(method, url, parameters, callback, noAutoToken) {
-		return _client.makeRequest(method, url, parameters, callback, noAutoToken);
+	buddy.get = function(url, parameters, callback, noAuto) {
+		return _client.get(url, parameters, callback, noAuto);
 	}
 
-	get = function(url, parameters, callback, noAuto) {
-		return makeRequest("GET", url, parameters, callback, noAuto);
+	buddy.post = function(url, parameters, callback, noAuto) {
+		return _client.post(url, parameters, callback, noAuto);
 	}
 
-	post = function(url, parameters, callback, noAuto) {
-		return makeRequest("POST", url, parameters, callback, noAuto);
+	buddy.put = function(url, parameters, callback, noAuto) {
+		return _client.put(url, parameters, callback, noAuto);
 	}
 
-	put = function(url, parameters, callback, noAuto) {
-		return makeRequest("PUT", url, parameters, callback, noAuto);
+	buddy.patch = function(url, parameters, callback, noAuto) {
+		return _client.patch(url, parameters, callback, noAuto);
 	}
 
-	patch = function(url, parameters, callback, noAuto) {
-		return makeRequest("PATCH", url, parameters, callback, noAuto);
+	buddy.delete = function(url, parameters, callback, noAuto) {
+		return _client.delete(url, parameters, callback, noAuto);
 	}
 	
-	
-	
-	return this;
+	return buddy;
 }();
-
-Buddy.delete = function(url, parameters, callback, noAuto) {
-		return makeRequest("DELETE", url, parameters, callback, noAuto);
-	}
