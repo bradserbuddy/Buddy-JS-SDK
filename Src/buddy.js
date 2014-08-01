@@ -220,7 +220,7 @@ window.Buddy =  function (root) {
 					user_id: user.id
 				});
 
-				setAccessToken('user', user);
+				setAccessToken(self, 'user', user);
 			
 			}
 			callback && callback(err, r && r.result);
@@ -377,7 +377,7 @@ window.Buddy =  function (root) {
 		            }
 		        }
 		        else {
-		            callback(err);
+		            callback(err, r1);
 		        }
 		    };
 		    cb._printResult = false;
@@ -575,7 +575,7 @@ window.Buddy =  function (root) {
 	
 	
 	
-	_clients = [];
+	_clients = {};
 	_client = null;
 	
 	buddy.init = function(appId, appKey, options) {
