@@ -102,6 +102,16 @@ window.Buddy =  function (root) {
 		}
 		this._appKey = appKey;
 
+		if (settings) {
+		    if (settings['sharedSecret']) {
+		        this._sharedSecret = settings['sharedSecret'];
+		        delete settings['sharedSecret'];
+		    }
+		    else {
+		        this._sharedSecret = null;
+		    }
+		}
+
 		// set the settings so we pick up the instanceName
 		//
 		this._settings = settings;
@@ -129,22 +139,8 @@ window.Buddy =  function (root) {
 	function getSettings(client, force) {
 		if ((!client._settings || force) && supports_html5_storage() && client._appId) {
 
-		    var sharedSecret;
-
-		    if (client._settings) {
-		        sharedSecret = client._settings['sharedSecret'];
-		    }
-
 			var json = window.localStorage.getItem(_calculateClientKey(client._appId, client._settings));
 			client._settings = JSON.parse(json);
-
-            // Since we dont persist sharedSecret, we save any value it has before getting, and then re-add it back to settings afterwards
-			if (sharedSecret) {
-			    if (!client._settings) {
-			        client._settings = {};
-			    }
-			    client._settings['sharedSecret'] = sharedSecret;
-			}
 		}
 		return client._settings || {};
 	}
@@ -160,14 +156,8 @@ window.Buddy =  function (root) {
                 }
             }
 
-            // Dont persist the sharedSecret.
-            var settingsToSave = $.extend(true,{}, settings);
-            if (settingsToSave['sharedSecret']) {
-                delete settingsToSave['sharedSecret'];
-            }
-
 			if (!client._settings.nosave) {
-			    window.localStorage.setItem(_calculateClientKey(client._appId, client._settings), JSON.stringify(settingsToSave));
+			    window.localStorage.setItem(_calculateClientKey(client._appId, client._settings), JSON.stringify(settings));
 			}
 			client._settings = settings;
 			return client._settings;
@@ -257,8 +247,8 @@ window.Buddy =  function (root) {
 		
 		var cb = function (err, r) {
 		    if (r.success) {
-		        if (self._settings && self._settings["sharedSecret"]) {
-		            var clientSig = makeServerDevicesSignature(self._appKey, self._settings["sharedSecret"]);
+		        if (self._settings && self._sharedSecret) {
+		            var clientSig = makeServerDevicesSignature(self._appKey, self._sharedSecret);
 		            if (r.result["serverSignature"] != clientSig) {
 		                var error = new Error("Unable to verify Server Signature");
 		                error.errorNumber = AuthErrors.AuthCannotValidateSharedSecret;
@@ -269,7 +259,7 @@ window.Buddy =  function (root) {
 		        }
 		        self._appId = appId || self._appId;
 		        self._appKey = appKey || self._appKey;
-		        var newSettings = { app_id: self._appId, app_key: self._appKey, sharedSecret: self._settings["sharedSecret"] };
+		        var newSettings = { app_id: self._appId, app_key: self._appKey};
 				if(r.result.serviceRoot)
 				{
 					newSettings["serviceRoot"] = r.result.serviceRoot;
@@ -516,8 +506,8 @@ window.Buddy =  function (root) {
 
 		var settings = getSettings(client);
 		if (at) {
-		    if (settings["sharedSecret"]) {
-		        var sig = makeHash(method, baseUrl, client._appId, settings["sharedSecret"]);
+		    if (client._sharedSecret) {
+		        var sig = makeHash(method, baseUrl, client._appId, client._sharedSecret);
 
 		        headers["Authorization"] = "Buddy " + at + " " + sig;
 		    }
