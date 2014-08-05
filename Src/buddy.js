@@ -129,25 +129,45 @@ window.Buddy =  function (root) {
 	function getSettings(client, force) {
 		if ((!client._settings || force) && supports_html5_storage() && client._appId) {
 
+		    var sharedSecret;
+
+		    if (client._settings) {
+		        sharedSecret = client._settings['sharedSecret'];
+		    }
+
 			var json = window.localStorage.getItem(_calculateClientKey(client._appId, client._settings));
 			client._settings = JSON.parse(json);
+
+            // Since we dont persist sharedSecret, we save any value it has before getting, and then re-add it back to settings afterwards
+			if (sharedSecret) {
+			    if (!client._settings) {
+			        client._settings = {};
+			    }
+			    client._settings['sharedSecret'] = sharedSecret;
+			}
 		}
 		return client._settings || {};
 	}
 	
     function updateSettings(client, updates, replace) {
-		if (supports_html5_storage() && client._appId) {
-			var settings = updates;
+        if (supports_html5_storage() && client._appId) {
+            var settings = updates;
 
-			if (!replace) {
-				settings = getSettings(client);
-				for (var key in updates) {
-					settings[key] = updates[key];
-				}
-			}
+            if (!replace) {
+                settings = getSettings(client);
+                for (var key in updates) {
+                    settings[key] = updates[key];
+                }
+            }
+
+            // Dont persist the sharedSecret.
+            var settingsToSave = $.extend(true,{}, settings);
+            if (settingsToSave['sharedSecret']) {
+                delete settingsToSave['sharedSecret'];
+            }
 
 			if (!client._settings.nosave) {
-			    window.localStorage.setItem(_calculateClientKey(client._appId, client._settings), JSON.stringify(settings));
+			    window.localStorage.setItem(_calculateClientKey(client._appId, client._settings), JSON.stringify(settingsToSave));
 			}
 			client._settings = settings;
 			return client._settings;
@@ -293,20 +313,6 @@ window.Buddy =  function (root) {
 		}
 
 		return s.user_id;
-	}
-
-	BuddyClient.prototype.setSharedSecret = function (secret) {
-	    var self = this;
-	    var settings = getSettings(self);
-	    settings["sharedSecret"] = secret;
-	    updateSettings(self,settings);
-	}
-
-	BuddyClient.prototype.clearSharedSecret = function () {
-	    var self = this;
-	    var settings = getSettings(self);
-	    delete settings["sharedSecret"];
-	    updateSettings(self,settings);
 	}
 
 	BuddyClient.prototype.loginUser = function(username, password, callback) {
@@ -723,14 +729,6 @@ window.Buddy =  function (root) {
 	        return getAccessToken(_client);
 	    }
 	});
-
-	buddy.setSharedSecret = function (secret) {
-	    return _client.setSharedSecret(secret);
-	}
-
-	buddy.clearSharedSecret = function () {
-	    return _client.clearSharedSecret();
-	}
 
 	buddy.loginUser = function(username, password, callback) {
 		return _client.loginUser(username, password, callback);
