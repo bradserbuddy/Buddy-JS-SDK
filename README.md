@@ -1,37 +1,124 @@
 # Buddy JavaScript SDK
-
 These release notes are for the Buddy Platform JavaScript SDK.
 
-Please refer to [buddyplatform.com/docs](http://buddyplatform.com/docs) for more details on the JavaScript SDK.
+Please refer to [buddyplatform.com/docs](https://buddyplatform.com/docs) for more details on the JavaScript SDK.
 
 ## Introduction
 
-Buddy enables developers to build engaging, cloud-connected apps without having to write, test, manage or scale server-side code or infrastructure. We noticed that most mobile app developers end up writing the same code over and over again: user management, photo management, geolocation checkins, metadata, and more.  
+We realized most developers end up writing the same code over and over again: user management, photo management, geolocation, checkins, metadata, and other common features. Buddy enables developers to build cloud-connected apps without having to write, test, manage or scale server-side code and infrastructure.
 
-Buddy's easy-to-use, scenario-focused APIs let you spend more time building your app, and less time worrying about backend infrastructure.  
+Buddy's scenario-focused APIs let you spend more time building your application and less time worrying about backend infrastructure.
 
-Let us handle that stuff for you!
+This SDK is a thin wrapper over the Buddy REST API that takes care of the hard parts for you:
 
-## Features
+* Building and formatting requests
+* Managing authentication
+* Parsing responses
+* Loading and saving credentials
 
-For developers the Buddy Platform offers turnkey support for features like the following:
-
-* *User Accounts* - create, delete, authenticate users.
-* *Photos* - add photos, search photos, share photos with other users.
-* *Geolocation* - check in, search for places, list past checkins.
-* *Push Notifications* - easily send push notifications to iOS, Android, or Microsoft devices.
-* *Messaging* - send messages to other users, create message groups.
-* *User Lists* - set up relationships between users.
-* *Game Scores, Metadata, and Boards* - keep track of game scores and states for individual users as well as across users.
-* *And more* - check out the rest of the offering at [buddy.com](http://buddy.com)
+The remainder of the Buddy API is accessible via standard REST API calls.
 
 ## Getting Started
 
-To get started with the Buddy Platform SDK, please reference the "Getting Started" series of documents at [buddyplatform.com/docs](http://buddyplatform.com/docs). You will need an App ID and Key before you can use the SDK, and these documents will walk you through obtaining those, and installing the SDK.
+To get started with the Buddy Platform SDK, please reference the _Getting Started_ series of documents at [buddyplatform.com/docs](https://buddyplatform.com/docs). You will need an application ID and key before you can use the SDK. The _Getting Started_ documents will walk you through obtaining everything you need and show you where to find the SDK for your platform.
 
-App IDs and Keys can be obtained at the Buddy Developer Dashboard at [buddyplatform.com](http://buddyplatform.com).
+Application IDs and keys are obtained at the Buddy Developer Dashboard at [buddyplatform.com](https://buddyplatform.com/login).
 
-Full documentation for Buddy's services are available at [buddyplatform.com/docs](http://buddyplatform.com/docs).
+Full documentation for Buddy's services are available at [buddyplatform.com/docs](https://buddyplatform.com/docs).
+
+## Installing the SDK
+
+* Clone the repo to your desktop
+    git clone git clone https://github.com/BuddyPlatform/Buddy-JS-SDK.git
+* Move the *buddy.js* file to a convenient location within your project
+* Create or open your HTML project
+* Add the following lines to your `<HEAD>...</HEAD>` tags or at the end of `<BODY>` before any other JavaScript
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="buddy.js"></script>
+
+## Using the JavaScript SDK
+
+Visit the [Buddy Dashboard](https://buddyplatform.com) to obtain your application ID and key.
+
+### Initialize the SDK
+
+`Buddy.init('[your app id]', '[your app key]');`
+
+*You may see the word "Undefined" appear in your console here. This is not an error, it is simply Javascript's way of notifying you that the Buddy.init call does not return a value.*
+
+### User Flow
+
+The Buddy JavaScript SDK handles user creation and login.
+
+#### Create A User
+	
+	// Only username and password are required
+	Buddy.createUser({
+	  username: 'test',
+	  password: 'password',
+	  firstName: 'Test',
+	  lastName: 'User'
+	  email: 'test@test.com',
+	  dob: '4/23/1980'
+	}, [callback]);
+
+#### User Login
+	
+	// All functions from here on out accept callbacks
+	// Callbacks are optional in the JavaScript SDK as indicated by the [ ]
+	Buddy.loginUser('test', 'password', [callback]);
+
+#### User Logout
+
+	Buddy.logoutUser();
+
+### REST Interface
+
+Each SDK provides general wrappers that make REST calls to Buddy. <Add more SDK-specific information here>
+
+#### POST
+
+	// POST to Checkins
+	// Location is required
+	Buddy.post('/checkins', {location: '34.052, -118.243', description: 'Somewhere in LA'}, [callback]);
+
+#### GET
+
+	// GET a checkin by ID
+	var checkinId;
+	Buddy.get('/checkins/' + checkinId, [callback]);
+
+#### PUT/PATCH/DELETE
+
+Each remaining REST verb is available through the Buddy SDK using the same pattern as the POST and GET examples.
+
+### Working With Files
+
+Buddy offers support for binary files. The JavaScript SDK works with files through our REST interface similarly to other API calls.
+
+**Note:** Responses for files deviate from the standard Buddy response templates. See the [Buddy Platform documentation](https://buddyplatform.com/docs) for more information.
+
+#### Upload A File
+
+Here we demonstrate uploading a picture. All binary files use the same pattern with a different path and different parameters. To upload a picture POST to `'/pictures'`
+
+	// This example assumes both of the following HTML elements exist:
+	// <input type="file" id="file" name="file" />
+	// <input id="uploadButton" type="button" value="Upload" />
+
+	$('#uploadButton').click(function() {
+	  
+	  var inputFile = $('#file')[0];
+	  
+	  var myImage = inputFile.files[0];
+	  
+	  Buddy.post('/pictures', {data: myImage});  
+	  
+	});
+
+#### Download A File
+
+The Buddy JavaScript SDK `does not` support file downloads at this time, please check back again soon.
 
 ## Contributing Back: Pull Requests
 
@@ -41,7 +128,7 @@ To submit a change to the Buddy SDK please do the following:
 
 1. Create your own fork of the Buddy SDK
 2. Make the change to your fork
-3. Before creating your pull request, please sync your repository to the current state of the parent repository: ```git pull origin master```
+3. Before creating your pull request, please sync your repository to the current state of the parent repository: `git pull origin master`
 4. Commit your changes, then [submit a pull request](https://help.github.com/articles/using-pull-requests) for just that commit
 
 ## License
@@ -59,4 +146,5 @@ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
+
 
