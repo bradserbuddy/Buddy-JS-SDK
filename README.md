@@ -9,14 +9,12 @@ We realized most developers end up writing the same code over and over again: us
 
 Buddy's scenario-focused APIs let you spend more time building your application and less time worrying about backend infrastructure.
 
-This SDK is a thin wrapper over the Buddy REST API that takes care of the hard parts for you:
+The JavaScript SDK handles the following functionality:
 
 * Building and formatting requests
 * Managing authentication
 * Parsing responses
 * Loading and saving credentials
-
-The remainder of the Buddy API is accessible via standard REST API calls.
 
 ## Getting Started
 
@@ -74,7 +72,7 @@ The Buddy JavaScript SDK handles user creation and login.
 
 ### REST Interface
 
-Each SDK provides general wrappers that make REST calls to Buddy. <Add more SDK-specific information here>
+Each SDK provides wrappers that make REST calls to Buddy.
 
 #### POST
 
@@ -118,7 +116,8 @@ Here we demonstrate uploading a picture. All binary files use the same pattern w
 
 #### Download A File
 
-The Buddy JavaScript SDK `does not` support file downloads at this time, please check back again soon.
+Due to browser limitations the JavaScript SDK does not support direct file downloads. To retrieve a file call:
+
 
 ## Contributing Back: Pull Requests
 
