@@ -239,6 +239,8 @@ window.Buddy =  function (root) {
 	
 	BuddyClient.prototype.registerDevice = function(appId, appKey, callback){
 		if (getAccessToken(this)) {
+
+		buddy.registerDevice(appId, appKey, callback);
 			callback && callback();
 			return;
 		}
