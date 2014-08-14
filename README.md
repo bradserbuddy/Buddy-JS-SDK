@@ -125,10 +125,13 @@ We'd love to have your help making the Buddy SDK as good as it can be!
 
 To submit a change to the Buddy SDK please do the following:
 
-1. Create your own fork of the Buddy SDK
-2. Make the change to your fork
-3. Before creating your pull request, please sync your repository to the current state of the parent repository: `git pull origin master`
-4. Commit your changes, then [submit a pull request](https://help.github.com/articles/using-pull-requests) for just that commit
+1) Create your own fork of the Buddy SDK
+
+2) Make the change to your fork
+
+3) Before creating your pull request, please sync your repository to the current state of the parent repository: `git pull origin master`
+
+4) Commit your changes, then [submit a pull request](https://help.github.com/articles/using-pull-requests) for just that commit
 
 ## License
 
