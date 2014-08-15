@@ -24,7 +24,7 @@ Application IDs and keys are obtained at the Buddy Developer Dashboard at [buddy
 
 Full documentation for Buddy's services are available at [buddyplatform.com/docs](https://buddyplatform.com/docs).
 
-## Installing the SDK
+### Installing the SDK
 
 1) Clone the repo to your desktop
 
