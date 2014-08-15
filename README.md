@@ -116,8 +116,7 @@ Here we demonstrate uploading a picture. All binary files use the same pattern w
 
 #### Download A File
 
-Due to browser limitations the JavaScript SDK does not support direct file downloads. To retrieve a file call:
-
+Due to browser limitations the JavaScript SDK does not support direct file downloads.
 
 ## Contributing Back: Pull Requests
 
