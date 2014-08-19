@@ -333,9 +333,7 @@ window.Buddy =  function (root) {
 	}
 
 	BuddyClient.prototype.logoutUser = function(callback) {
-		var s = getSettings(this);
 		var self = this;
-		var userId = s.user_id;
 		
 		var cb = function(err, r){
 			clearSettings(self);
