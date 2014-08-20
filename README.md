@@ -24,13 +24,18 @@ Application IDs and keys are obtained at the Buddy Developer Dashboard at [buddy
 
 Full documentation for Buddy's services are available at [buddyplatform.com/docs](https://buddyplatform.com/docs).
 
-## Installing the SDK
+### Installing the SDK
 
-* Clone the repo to your desktop
+1) Clone the repo to your desktop
+
     git clone git clone https://github.com/BuddyPlatform/Buddy-JS-SDK.git
-* Move the *buddy.js* file to a convenient location within your project
-* Create or open your HTML project
-* Add the following lines to your `<HEAD>...</HEAD>` tags or at the end of `<BODY>` before any other JavaScript
+
+2) Move the *buddy.js* file to a convenient location within your project
+
+3) Create or open your HTML project
+
+4) Add the following lines to your `<HEAD>...</HEAD>` tags or at the end of `<BODY>` before any other JavaScript
+
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script src="buddy.js"></script>
 
@@ -116,8 +121,7 @@ Here we demonstrate uploading a picture. All binary files use the same pattern w
 
 #### Download A File
 
-Due to browser limitations the JavaScript SDK does not support direct file downloads. To retrieve a file call:
-
+Due to browser limitations the JavaScript SDK does not support direct file downloads.
 
 ## Contributing Back: Pull Requests
 
