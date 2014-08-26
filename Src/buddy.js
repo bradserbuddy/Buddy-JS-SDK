@@ -656,6 +656,7 @@ window.Buddy =  function (root) {
 	}
 
 	BuddyClient.prototype.socialLogin = function(identityProviderName, identityID, identityAccessToken, callback){
+		var self = this;
 		var cb = function(err, r){
 			if (r.success) {
 				var user = r.result;
@@ -663,7 +664,7 @@ window.Buddy =  function (root) {
 					user_id: user.id
 				});
 
-				setAccessToken(this, 'user', user);
+				setAccessToken(self, 'user', user);
 			}
 			callback && callback(err, r && r.result);
 		};
