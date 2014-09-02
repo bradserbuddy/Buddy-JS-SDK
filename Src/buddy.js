@@ -169,7 +169,7 @@ window.Buddy =  function (root) {
 
 			if (!type) {
 				window.localStorage.removeItem(_calculateClientKey(client._appId, client._settings));
-				client._settings = {}
+				client._settings = $.extend({}, client._options);
 			}
 			else {
 
@@ -338,14 +338,20 @@ window.Buddy =  function (root) {
 			return callback && callback();
 		}
 
-		return this.post('/users/me/logout', function(){
+		var self = this;
 
-				clearSettings({
-					user: true
-				})
+		var cb = function(){
 
-				callback && callback();
-		});
+		    clearSettings(self, {
+		        user: true
+		    });
+
+		    callback && callback();
+		};
+
+		cb._printResult = callback;
+
+		return this.post('/users/me/logout', cb);
 	}
 
 	BuddyClient.prototype.createUser = function(options, callback) {
@@ -696,6 +702,8 @@ window.Buddy =  function (root) {
 		}
 		
 		_client = _clients[clientKey];
+
+		_client._options = options;
 		
 		return _client;
 	}
