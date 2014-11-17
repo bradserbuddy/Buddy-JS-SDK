@@ -81,7 +81,7 @@ Each SDK provides wrappers that make REST calls to Buddy.
 
 #### POST
 
-We now can call GET to [search for the checkin](https://buddyplatform.com/docs/Checkins#SearchCheckins) we just created!
+In this example we'll create a checkin. Take a look at the [create checkin REST documentation](https://buddyplatform.com/docs/Checkins#CreateCheckin) then:
 
 	// POST to Checkins
 	// Location is required
@@ -156,5 +156,3 @@ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
 WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 License for the specific language governing permissions and limitations under
 the License.
-
-
