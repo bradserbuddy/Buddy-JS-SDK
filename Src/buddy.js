@@ -367,9 +367,9 @@ window.Buddy =  function (root) {
 	}
 
 	BuddyClient.prototype.recordMetricEvent = function(eventName, values, timeoutInSeconds, callback) {
-		if (typeof timeoutInMinutes == 'function') {
-			callback = timeoutInMinutes;
-			timeoutInMinutes = null;
+		if (typeof timeoutInSeconds == 'function') {
+			callback = timeoutInSeconds;
+			timeoutInSeconds = null;
 		}
 		var self = this;
 		
