@@ -239,6 +239,7 @@ window.Buddy =  function (root) {
 	
 	BuddyClient.prototype.registerDevice = function(appId, appKey, callback){
 		if (getAccessToken(this)) {
+		    buddy.registerDevice(appId, appKey, callback);
 			callback && callback();
 			return;
 		}
@@ -376,9 +377,9 @@ window.Buddy =  function (root) {
 	}
 
 	BuddyClient.prototype.recordMetricEvent = function(eventName, values, timeoutInSeconds, callback) {
-		if (typeof timeoutInMinutes == 'function') {
-			callback = timeoutInMinutes;
-			timeoutInMinutes = null;
+		if (typeof timeoutInSeconds == 'function') {
+			callback = timeoutInSeconds;
+			timeoutInSeconds = null;
 		}
 		var self = this;
 		
@@ -662,6 +663,7 @@ window.Buddy =  function (root) {
 	}
 
 	BuddyClient.prototype.socialLogin = function(identityProviderName, identityID, identityAccessToken, callback){
+		var self = this;
 		var cb = function(err, r){
 			if (r.success) {
 				var user = r.result;
@@ -669,7 +671,7 @@ window.Buddy =  function (root) {
 					user_id: user.id
 				});
 
-				setAccessToken(this, 'user', user);
+				setAccessToken(self, 'user', user);
 			}
 			callback && callback(err, r && r.result);
 		};

@@ -1,20 +1,17 @@
 # Buddy JavaScript SDK
-These release notes are for the Buddy Platform JavaScript SDK.
 
-Please refer to [buddyplatform.com/docs](https://buddyplatform.com/docs) for more details on the JavaScript SDK.
+## Overview
 
-## Introduction
+The Buddy JavaScript SDK helps you get up and running in seconds.  
 
-We realized most developers end up writing the same code over and over again: user management, photo management, geolocation, checkins, metadata, and other common features. Buddy enables developers to build cloud-connected apps without having to write, test, manage or scale server-side code and infrastructure.
-
-Buddy's scenario-focused APIs let you spend more time building your application and less time worrying about backend infrastructure.
-
-The JavaScript SDK handles the following functionality:
+For the most part, the Buddy JavaScript SDK takes care of all the housekeeping of making requests against the Buddy REST API:
 
 * Building and formatting requests
 * Managing authentication
 * Parsing responses
 * Loading and saving credentials
+
+With that handled, all you have to do is initialize the SDK and start making some calls!
 
 ## Getting Started
 
@@ -47,7 +44,7 @@ Visit the [Buddy Dashboard](https://buddyplatform.com) to obtain your applicatio
 
 `Buddy.init('[your app id]', '[your app key]');`
 
-*You may see the word "Undefined" appear in your console here. This is not an error, it is simply Javascript's way of notifying you that the Buddy.init call does not return a value.*
+*You may see the word "Undefined" appear in your console here. This is not an error, it is simply JavaScript's way of notifying you that the Buddy.init call does not return a value.*
 
 ### User Flow
 
@@ -141,18 +138,6 @@ To submit a change to the Buddy SDK please do the following:
 
 4) Commit your changes, then [submit a pull request](https://help.github.com/articles/using-pull-requests) for just that commit
 
-## License
+## Questions or need help?
 
-#### Copyright (C) 2014 Buddy Platform, Inc.
-
-Licensed under the Apache License, Version 2.0 (the "License"); you may not
-use this file except in compliance with the License. You may obtain a copy of
-the License at
-
-  [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-License for the specific language governing permissions and limitations under
-the License.
+This should have given you the basics of how to work with the Buddy JavaScript SDK. If you have further questions or are stuck, send an email to support@buddy.com.
