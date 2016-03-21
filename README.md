@@ -25,7 +25,7 @@ Full documentation for Buddy's services are available at [buddyplatform.com/docs
 
 1) Clone the repo to your desktop
 
-    git clone git clone https://github.com/BuddyPlatform/Buddy-JS-SDK.git
+    git clone https://github.com/BuddyPlatform/Buddy-JS-SDK.git
 
 2) Move the *buddy.js* file to a convenient location within your project
 
@@ -57,7 +57,7 @@ The Buddy JavaScript SDK handles user creation and login.
 	  username: 'test',
 	  password: 'password',
 	  firstName: 'Test',
-	  lastName: 'User'
+	  lastName: 'User',
 	  email: 'test@test.com',
 	  dob: '4/23/1980'
 	}, [callback]);
