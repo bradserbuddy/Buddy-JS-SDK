@@ -25,7 +25,7 @@ Full documentation for Buddy's services are available at [buddyplatform.com/docs
 
 1) Clone the repo to your desktop
 
-    git clone git clone https://github.com/BuddyPlatform/Buddy-JS-SDK.git
+    git clone https://github.com/BuddyPlatform/Buddy-JS-SDK.git
 
 2) Move the *buddy.js* file to a convenient location within your project
 
@@ -57,7 +57,7 @@ The Buddy JavaScript SDK handles user creation and login.
 	  username: 'test',
 	  password: 'password',
 	  firstName: 'Test',
-	  lastName: 'User'
+	  lastName: 'User',
 	  email: 'test@test.com',
 	  dob: '4/23/1980'
 	}, [callback]);
@@ -78,11 +78,15 @@ Each SDK provides wrappers that make REST calls to Buddy.
 
 #### POST
 
+In this example we'll create a checkin. Take a look at the [create checkin REST documentation](https://buddyplatform.com/docs/Checkins#CreateCheckin) then:
+
 	// POST to Checkins
 	// Location is required
 	Buddy.post('/checkins', {location: '34.052, -118.243', description: 'Somewhere in LA'}, [callback]);
 
 #### GET
+
+We now can call GET to [search for the checkin](https://buddyplatform.com/docs/Checkins#SearchCheckins) we just created!
 
 	// GET a checkin by ID
 	var checkinId;
@@ -100,7 +104,7 @@ Buddy offers support for binary files. The JavaScript SDK works with files throu
 
 #### Upload A File
 
-Here we demonstrate uploading a picture. All binary files use the same pattern with a different path and different parameters. To upload a picture POST to `'/pictures'`
+Here we demonstrate uploading a picture. For all binary files (e.g. blobs and videos), the pattern is the same, but with a different path and different parameters. For full documentation see our [Media and Files](https://buddyplatform.com/docs/Media%20and%20Files) documentation page.
 
 	// This example assumes both of the following HTML elements exist:
 	// <input type="file" id="file" name="file" />
@@ -136,4 +140,4 @@ To submit a change to the Buddy SDK please do the following:
 
 ## Questions or need help?
 
-This should have given you the basics of how to work with the Buddy .NET SDK. If you have further questions or are stuck, send an email to support@buddy.com.
+This should have given you the basics of how to work with the Buddy JavaScript SDK. If you have further questions or are stuck, send an email to support@buddy.com.
