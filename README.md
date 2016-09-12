@@ -15,11 +15,11 @@ With that handled, all you have to do is initialize the SDK and start making som
 
 ## Getting Started
 
-To get started with the Buddy Platform SDK, please reference the _Getting Started_ series of documents at [buddyplatform.com/docs](https://buddyplatform.com/docs). You will need an application ID and key before you can use the SDK. The _Getting Started_ documents will walk you through obtaining everything you need and show you where to find the SDK for your platform.
+To get started with the Buddy Platform SDK, please reference the _Getting Started_ series of documents at [docs.buddy.com](https://docs.buddy.com). You will need an application ID and key before you can use the SDK. The _Getting Started_ documents will walk you through obtaining everything you need and show you where to find the SDK for your platform.
 
 Application IDs and keys are obtained at the Buddy Developer Dashboard at [buddyplatform.com](https://buddyplatform.com/login).
 
-Full documentation for Buddy's services are available at [buddyplatform.com/docs](https://buddyplatform.com/docs).
+Full documentation for Buddy's services are available at [docs.buddy.com](https://docs.buddy.com).
 
 ### Installing the SDK
 
@@ -78,7 +78,7 @@ Each SDK provides wrappers that make REST calls to Buddy.
 
 #### POST
 
-In this example we'll create a checkin. Take a look at the [create checkin REST documentation](https://buddyplatform.com/docs/Checkins#CreateCheckin) then:
+In this example we'll create a checkin. Take a look at the [create checkin REST documentation](http://docs.buddy.com/docs/create-checkin) then:
 
 	// POST to Checkins
 	// Location is required
@@ -86,7 +86,7 @@ In this example we'll create a checkin. Take a look at the [create checkin REST 
 
 #### GET
 
-We now can call GET to [search for the checkin](https://buddyplatform.com/docs/Checkins#SearchCheckins) we just created!
+We now can call GET to [search for the checkin](https://docs.buddy.com/docs/search-checkins) we just created!
 
 	// GET a checkin by ID
 	var checkinId;
@@ -100,11 +100,11 @@ Each remaining REST verb is available through the Buddy SDK using the same patte
 
 Buddy offers support for binary files. The JavaScript SDK works with files through our REST interface similarly to other API calls.
 
-**Note:** Responses for files deviate from the standard Buddy response templates. See the [Buddy Platform documentation](https://buddyplatform.com/docs) for more information.
+**Note:** Responses for files deviate from the standard Buddy response templates. See the [Buddy Platform documentation](https://docs.buddy.com/docs) for more information.
 
 #### Upload A File
 
-Here we demonstrate uploading a picture. For all binary files (e.g. blobs and videos), the pattern is the same, but with a different path and different parameters. For full documentation see our [Media and Files](https://buddyplatform.com/docs/Media%20and%20Files) documentation page.
+Here we demonstrate uploading a picture. For all binary files (e.g. blobs and videos), the pattern is the same, but with a different path and different parameters. For full documentation see our [Media and Files](https://docs.buddy.com/docs/create-picture) documentation page.
 
 	// This example assumes both of the following HTML elements exist:
 	// <input type="file" id="file" name="file" />

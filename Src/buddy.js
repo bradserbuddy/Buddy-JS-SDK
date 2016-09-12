@@ -265,7 +265,7 @@ window.Buddy =  function (root) {
 				{
 					newSettings["serviceRoot"] = r.result.serviceRoot;
 				}
-		        updateSettings(newSettings);
+		        updateSettings(self, newSettings);
 		        setAccessToken(self, "device", r.result);
 		        self._output && self._output.log && self._output.log("Device Registration Complete.");
 		        callback && callback(err, r);
@@ -582,7 +582,7 @@ window.Buddy =  function (root) {
 		// OK, let's make the call for realz
 		//
 		var s = getSettings(client);
-		var r = s.root || root;
+		var r = s.serviceRoot || s.root;
 		
 		var self = client;
 	    $.ajax({
